@@ -8,9 +8,32 @@ trigger:
 resources:
 - repo: self
 
-- task: Docker@2
-  inputs:
-    containerRegistry: 'blazercontainerregistry-4841'
-    repository: 'new_blazer_test'
-    command: 'buildAndPush'
-    Dockerfile: '**/Dockerfile'
+variables:
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: '70c86926-7ba0-4259-ba6e-63d2b7192efa'
+  imageRepository: 'ajaysamdockerizedclientsideblazor'
+  containerRegistry: 'blazercontainerregistry.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: $(dockerfilePath)
+        containerRegistry: $(dockerRegistryServiceConnection)
+        tags: |
+          $(tag)
